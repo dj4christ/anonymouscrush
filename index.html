@@ -37,7 +37,6 @@
       font-size: 1rem;
     }
     button {
-      background: #ff758c;
       background: linear-gradient(to right, #ff758c, #ff7eb3);
       border: none;
       padding: 0.8rem;
@@ -72,27 +71,34 @@
   <script>
     document.getElementById("crushForm").addEventListener("submit", async function(e) {
       e.preventDefault();
-
       const form = e.target;
       const formData = new FormData(form);
-
-      const response = await fetch("https://anonomouscrush.onrender.com", {
-        method: "POST",
-        body: formData
-      });
-
-      const result = await response.json();
       const messageEl = document.getElementById("message");
 
-      if (result.error) {
-        messageEl.style.color = "red";
-        messageEl.textContent = result.error;
-      } else {
-        messageEl.style.color = "green";
+      try {
+        const response = await fetch("https://anonomouscrush.onrender.com/submit", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!response.ok) {
+          let errMsg = "Unknown error";
+          try {
+            const err = await response.json();
+            errMsg = err.error || errMsg;
+          } catch {}
+          throw new Error(errMsg);
+        }
+
+        const result = await response.json();
+        messageEl.style.color = result.match ? "green" : "black";
         messageEl.textContent = result.match
           ? "🎉 You have a match! Check your email."
           : "✅ Submission saved!";
         form.reset();
+      } catch (error) {
+        messageEl.style.color = "red";
+        messageEl.textContent = `Error: ${error.message}`;
       }
     });
   </script>
